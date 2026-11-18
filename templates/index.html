@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Agriculture | Monitoring Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">🌱</div>
+        <div><div class="brand-name">AgriSense</div><div class="brand-sub">SMART AGRICULTURE MONITORING</div></div>
+      </div>
+      <div class="live"><span class="pulse"></span> LIVE SIMULATION</div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">FARM INTELLIGENCE PLATFORM</p>
+          <h1>Monitor your field.<br><span>Grow smarter.</span></h1>
+          <p class="intro">A simple IoT-style dashboard to monitor soil and weather conditions and make better irrigation decisions.</p>
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="sun"></div><div class="hill hill-one"></div><div class="hill hill-two"></div><div class="sprout">🌾</div></div>
+      </section>
+
+      <section class="section-head">
+        <div><p class="eyebrow">FIELD OVERVIEW</p><h2>Environmental readings</h2></div>
+        <button id="refresh" class="refresh">↻ Refresh readings</button>
+      </section>
+
+      <section class="metrics">
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-icon soil">💧</span><span class="tag">SOIL</span></div>
+          <p class="metric-label">Soil moisture</p><div class="metric-value"><span id="moisture">{{ readings.soil_moisture }}</span><small>%</small></div>
+          <div class="meter"><span id="moisture-bar" style="width: {{ readings.soil_moisture }}%"></span></div>
+          <p class="metric-foot">Recommended: 35–75%</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-icon temp">🌡️</span><span class="tag">AIR</span></div>
+          <p class="metric-label">Temperature</p><div class="metric-value"><span id="temperature">{{ readings.temperature }}</span><small>°C</small></div>
+          <p class="metric-foot">Ambient field temperature</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-icon humidity">☁️</span><span class="tag">AIR</span></div>
+          <p class="metric-label">Humidity</p><div class="metric-value"><span id="humidity">{{ readings.humidity }}</span><small>%</small></div>
+          <p class="metric-foot">Relative air humidity</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-icon rain">🌧️</span><span class="tag">WEATHER</span></div>
+          <p class="metric-label">Rainfall</p><div class="metric-value"><span id="rainfall">{{ readings.rainfall }}</span><small>mm</small></div>
+          <p class="metric-foot">Simulated recent rainfall</p>
+        </article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="panel status-panel">
+          <p class="eyebrow">FIELD CONDITION</p><h2>Smart irrigation advice</h2>
+          <div id="status-pill" class="status-pill {{ status.class }}"><span class="status-dot"></span><span id="status-label">{{ status.label }}</span></div>
+          <p id="advice" class="advice">{{ status.advice }}</p>
+          <div class="recommendation"><span>💡</span><div><b>Recommendation</b><p>Check the soil regularly. Irrigation needs depend on crop type, soil and local weather.</p></div></div>
+        </article>
+        <article class="panel system-panel">
+          <p class="eyebrow">SYSTEM INFORMATION</p><h2>Project status</h2>
+          <div class="system-row"><span>Monitoring service</span><b><i class="online-dot"></i> Online</b></div>
+          <div class="system-row"><span>Data source</span><b>Software simulation</b></div>
+          <div class="system-row"><span>Last updated</span><b id="updated">{{ readings.updated_at }}</b></div>
+          <div class="system-row"><span>Refresh interval</span><b>15 seconds</b></div>
+        </article>
+      </section>
+      <p class="disclaimer">Academic mini-project demonstration · Sensor values are simulated and are not readings from physical devices.</p>
+    </main>
+    <footer>AgriSense <span>•</span> Smart Agriculture Monitoring System</footer>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    async function refreshReadings() {
+      const button = $("refresh");
+      button.disabled = true;
+      button.textContent = "↻ Updating...";
+      try {
+        const response = await fetch("/api/readings");
+        if (!response.ok) throw new Error("Could not load readings");
+        const d = await response.json();
+        $("moisture").textContent = d.soil_moisture;
+        $("temperature").textContent = d.temperature;
+        $("humidity").textContent = d.humidity;
+        $("rainfall").textContent = d.rainfall;
+        $("moisture-bar").style.width = d.soil_moisture + "%";
+        $("updated").textContent = d.updated_at;
+        $("status-label").textContent = d.status.label;
+        $("advice").textContent = d.status.advice;
+        $("status-pill").className = "status-pill " + d.status.class;
+      } catch (error) {
+        $("updated").textContent = "Update failed — try again";
+      } finally {
+        button.disabled = false;
+        button.textContent = "↻ Refresh readings";
+      }
+    }
+    $("refresh").addEventListener("click", refreshReadings);
+    setInterval(refreshReadings, 15000);
+  </script>
+</body>
+</html>
